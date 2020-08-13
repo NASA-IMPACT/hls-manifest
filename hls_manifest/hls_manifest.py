@@ -15,6 +15,9 @@ import click
 import os
 import json
 import hashlib
+from datetime import datetime
+from pkg_resources import resource_stream
+from jsonschema import validate
 from urllib.parse import urlparse
 
 
@@ -52,12 +55,14 @@ def main(inputdir, outputfile, bucket, collection, product, jobid):
     manifest = {}
     manifest["collection"] = collection
     manifest["identifier"] = jobid
-    manifest["version"] = "1.5"
+    manifest["version"] = "1.4"
+    manifest["submissionTime"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
     files = []
     for filename in os.listdir(inputdir):
         if filename.endswith(".tif") or filename.endswith(".jpg") or filename.endswith(".xml"):
             file_item = {}
             file_item["name"] = filename
+            file_item["dataVersion"] = "1.5"
             size = os.path.getsize(os.path.join(inputdir, filename))
             file_item["size"] = size
             with open(os.path.join(inputdir, filename), "rb") as f:
@@ -68,7 +73,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid):
                         break
                     file_hash.update(chunk)
             file_item["checksum"] = file_hash.hexdigest()
-            file_item["checksumType"] = "SHA512"
+            file_item["checksumType"] = "SHA-512"
 
             normal_bucket = urlparse(bucket).geturl()
             file_item["uri"] = "%s/%s" % (normal_bucket, filename)
@@ -85,7 +90,21 @@ def main(inputdir, outputfile, bucket, collection, product, jobid):
         else:
             continue
 
-    manifest["product"] = {"name": product, "files": files}
+    manifest["product"] = {
+        "name": product,
+        "filegroups": [
+            {
+                "id": product,
+                "files": files
+            }
+        ]
+    }
+
+    schema = json.load(
+        resource_stream("hls_manifest", "schema/cnm.json")
+    )
+
+    validate(instance=manifest, schema=schema)
     with open(outputfile, 'w') as out:
         json.dump(manifest, out)
 
