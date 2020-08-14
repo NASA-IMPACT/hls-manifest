@@ -62,7 +62,6 @@ def main(inputdir, outputfile, bucket, collection, product, jobid):
         if filename.endswith(".tif") or filename.endswith(".jpg") or filename.endswith(".xml"):
             file_item = {}
             file_item["name"] = filename
-            file_item["dataVersion"] = "1.5"
             size = os.path.getsize(os.path.join(inputdir, filename))
             file_item["size"] = size
             with open(os.path.join(inputdir, filename), "rb") as f:
@@ -92,6 +91,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid):
 
     manifest["product"] = {
         "name": product,
+        "dataVersion": "1.5",
         "filegroups": [
             {
                 "id": product,
