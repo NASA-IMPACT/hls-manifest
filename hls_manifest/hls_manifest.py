@@ -8,7 +8,7 @@ Usage: create_manifest [OPTIONS]
 
 Example:
 $ create_manifest ./hlsdata hlsmanifest.json hls-global HLSS30
-HLS.S30.T01LAH.2020097T222759.v1.5 aeere-33-cssdr
+HLS.S30.T01LAH.2020097T222759.v1.5 aeere-33-cssdr false
 
 """
 import click
@@ -46,7 +46,12 @@ from urllib.parse import urlparse
     "jobid",
     type=click.STRING,
 )
-def main(inputdir, outputfile, bucket, collection, product, jobid):
+
+@click.argument(
+    "gibs",
+    type=click.BOOL,
+)
+def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     """
     BUCKET is the target LPDAAC S3 bucket.
 
@@ -72,17 +77,26 @@ def main(inputdir, outputfile, bucket, collection, product, jobid):
                         break
                     file_hash.update(chunk)
             file_item["checksum"] = file_hash.hexdigest()
-            file_item["checksumType"] = "SHA-512"
+            file_item["checksumType"] = "SHA512"
 
             normal_bucket = urlparse(bucket).geturl()
             file_item["uri"] = "%s/%s" % (normal_bucket, filename)
-
-            if filename.endswith(".tif"):
-                file_item["type"] = "data"
-            if filename.endswith(".xml"):
-                file_item["type"] = "metadata"
-            if filename.endswith(".jpg"):
-                file_item["type"] = "browse"
+            if gibs:
+                if filename.endswith(".tif"):
+                    file_item["type"] = "browse"
+                    file_item["subtype"] = "browse"
+                if filename.endswith(".xml"):
+                    file_item["type"] = "metadata"
+                    file_item["subtype"] = "ImageMetadata-v1.2"
+                if filename.endswith(".jpg"):
+                    file_item["type"] = "browse"
+            else:
+                if filename.endswith(".tif"):
+                    file_item["type"] = "data"
+                if filename.endswith(".xml"):
+                    file_item["type"] = "metadata"
+                if filename.endswith(".jpg"):
+                    file_item["type"] = "browse"
 
             files.append(file_item)
             continue
@@ -92,16 +106,12 @@ def main(inputdir, outputfile, bucket, collection, product, jobid):
     manifest["product"] = {
         "name": product,
         "dataVersion": "1.5",
-        "filegroups": [
-            {
-                "id": product,
-                "files": files
-            }
-        ]
+        "id": product,
+        "files": files
     }
 
     schema = json.load(
-        resource_stream("hls_manifest", "schema/cnm.json")
+        resource_stream("hls_manifest", "schema/cumulus_sns_schema_v1.4.1.json")
     )
 
     validate(instance=manifest, schema=schema)
