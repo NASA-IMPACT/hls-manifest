@@ -28,7 +28,7 @@ def test_hls_manifest():
 
 
 def test_hls_gibs_manifest():
-    product = "HLS.S30.T01LAH.2020097T222759.v1.5"
+    product = "HLS.S30.2020116.099152_6"
     outputfile = os.path.join(test_dir, product.format(".json"))
     bucket = "s3://hls-global"
     collection = "HLSS30"
