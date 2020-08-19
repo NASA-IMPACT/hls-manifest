@@ -46,7 +46,6 @@ from urllib.parse import urlparse
     "jobid",
     type=click.STRING,
 )
-
 @click.argument(
     "gibs",
     type=click.BOOL,
@@ -60,6 +59,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     manifest = {}
     manifest["collection"] = collection
     manifest["identifier"] = jobid
+    manifest["duplicationid"] = product
     manifest["version"] = "1.4"
     manifest["submissionTime"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
     files = []
@@ -82,6 +82,8 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
             normal_bucket = urlparse(bucket).geturl()
             file_item["uri"] = "%s/%s" % (normal_bucket, filename)
             if gibs:
+                product_components = product.split("_")
+                product_name = product_components[0]
                 if filename.endswith(".tif"):
                     file_item["type"] = "browse"
                     file_item["subtype"] = "browse"
@@ -91,6 +93,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
                 if filename.endswith(".jpg"):
                     file_item["type"] = "browse"
             else:
+                product_name = product
                 if filename.endswith(".tif"):
                     file_item["type"] = "data"
                 if filename.endswith(".xml"):
@@ -102,9 +105,8 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
             continue
         else:
             continue
-
     manifest["product"] = {
-        "name": product,
+        "name": product_name,
         "dataVersion": "1.5",
         "id": product,
         "files": files
