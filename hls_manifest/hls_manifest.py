@@ -61,7 +61,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     manifest["identifier"] = jobid
     manifest["duplicationid"] = product
     manifest["version"] = "1.4"
-    manifest["submissionTime"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+    manifest["submissionTime"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     files = []
     for filename in os.listdir(inputdir):
         if filename.endswith(".tif") or filename.endswith(".jpg") or filename.endswith(".xml"):
@@ -86,7 +86,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
                 product_name = product_components[0]
                 if filename.endswith(".tif"):
                     file_item["type"] = "browse"
-                    file_item["subtype"] = "browse"
+                    file_item["subtype"] = "geotiff"
                 if filename.endswith(".xml"):
                     file_item["type"] = "metadata"
                     file_item["subtype"] = "ImageMetadata-v1.2"
