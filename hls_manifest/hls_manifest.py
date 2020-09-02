@@ -57,7 +57,14 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     PRODUCT is the root product identifier with no extension.
     """
     manifest = {}
-    manifest["collection"] = collection
+    if gibs:
+        if collection == "HLSS30":
+            manifest["collection"] = "HLS_S30_Nadir_BRDF_Adjusted_Reflectance_v1.5_STD"
+        if collection == "HLSSL30":
+            manifest["collection"] = "HLS_L30_Nadir_BRDF_Adjusted_Reflectance_v1.5_STD"
+    else:
+        manifest["collection"] = collection
+
     manifest["identifier"] = jobid
     manifest["duplicationid"] = product
     manifest["version"] = "1.4"
