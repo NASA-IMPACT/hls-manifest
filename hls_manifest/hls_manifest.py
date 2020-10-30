@@ -3,8 +3,6 @@ Generate LPDAAC manifests for HLS products
 
 Usage: create_manifest [OPTIONS]
 
-  Translate a file to a COG.
-
 
 Example:
 $ create_manifest ./hlsdata hlsmanifest.json hls-global HLSS30
@@ -71,7 +69,8 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     manifest["submissionTime"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     files = []
     for filename in os.listdir(inputdir):
-        if filename.endswith(".tif") or filename.endswith(".jpg") or filename.endswith(".xml"):
+        if filename.endswith(".tif") or filename.endswith(".jpg") \
+                or filename.endswith(".xml") or filename.endswith("_stac.json"):
             file_item = {}
             file_item["name"] = filename
             size = os.path.getsize(os.path.join(inputdir, filename))
@@ -99,6 +98,8 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
                     file_item["subtype"] = "ImageMetadata-v1.2"
                 if filename.endswith(".jpg"):
                     file_item["type"] = "browse"
+                if filename.endswith("_stac.json"):
+                    file_item["type"] = "metadata"
             else:
                 product_name = product
                 if filename.endswith(".tif"):
@@ -107,6 +108,8 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
                     file_item["type"] = "metadata"
                 if filename.endswith(".jpg"):
                     file_item["type"] = "browse"
+                if filename.endswith("_stac.json"):
+                    file_item["type"] = "metadata"
 
             files.append(file_item)
             continue
