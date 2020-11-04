@@ -58,7 +58,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     if gibs:
         if collection == "HLSS30":
             manifest["collection"] = "HLS_S30_Nadir_BRDF_Adjusted_Reflectance_v1.5_STD"
-        if collection == "HLSSL30":
+        if collection == "HLSL30":
             manifest["collection"] = "HLS_L30_Nadir_BRDF_Adjusted_Reflectance_v1.5_STD"
     else:
         manifest["collection"] = collection
