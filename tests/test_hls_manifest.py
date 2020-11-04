@@ -45,3 +45,23 @@ def test_hls_gibs_manifest():
         gibs
     ], catch_exceptions=False)
     assert result.exit_code == 0
+
+
+def test_hls_L30_manifest():
+    product = "HLS.L30.T01LAH.2020097T222759.v1.5"
+    outputfile = os.path.join(test_dir, product.format(".json"))
+    bucket = "s3://hls-global"
+    collection = "HLSL30"
+    jobid = "test"
+    gibs = "true"
+    runner = CliRunner(echo_stdin=True)
+    result = runner.invoke(main, [
+        test_dir,
+        outputfile,
+        bucket,
+        collection,
+        product,
+        jobid,
+        gibs
+    ], catch_exceptions=False)
+    assert result.exit_code == 0
