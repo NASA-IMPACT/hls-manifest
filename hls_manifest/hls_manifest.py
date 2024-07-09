@@ -34,7 +34,7 @@ from urllib.parse import urlparse
 )
 @click.argument(
     "collection",
-    type=click.Choice(["HLSS30", "HLSL30"]),
+    type=click.Choice(["HLSS30", "HLSL30", "HLSS30_VI", "HLSL30_VI"]),
 )
 @click.argument(
     "product",
