@@ -4,7 +4,7 @@ setup(
     name="hls_manifest",
     version="0.1",
     packages=find_packages(),
-    install_requires=["click", "jsonschema", "importlib_resources; python_version < '3.7'"],
+    install_requires=["click", "jsonschema", "importlib_resources; python_version < '3.9'"],
     include_package_data=True,
     package_data={"hls_manifest": ["schema/*.json", ]},
     extras_require={"dev": ["flake8", "black"], "test": ["flake8", "pytest"]},
