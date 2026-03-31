@@ -14,7 +14,10 @@ import os
 import json
 import hashlib
 from datetime import datetime
-from pkg_resources import resource_stream
+try:
+    from importlib.resources import files as resource_files
+except ImportError:  # Python < 3.9
+    from importlib_resources import files as resource_files
 from jsonschema import validate
 from urllib.parse import urlparse
 
@@ -123,7 +126,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     }
 
     schema = json.load(
-        resource_stream("hls_manifest", "schema/cumulus_sns_schema_v1.4.1.json")
+        resource_files("hls_manifest").joinpath("schema/cumulus_sns_schema_v1.4.1.json").open("rb")
     )
 
     validate(instance=manifest, schema=schema)
