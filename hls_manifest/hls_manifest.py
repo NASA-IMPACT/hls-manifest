@@ -13,7 +13,7 @@ import click
 import os
 import json
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 try:
     from importlib.resources import files as resource_files
 except ImportError:  # Python < 3.9
@@ -69,7 +69,9 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     manifest["identifier"] = jobid
     manifest["duplicationid"] = product
     manifest["version"] = "1.4"
-    manifest["submissionTime"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    manifest["submissionTime"] = datetime.now(timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
     files = []
     for filename in os.listdir(inputdir):
         if filename.endswith(".tif") or filename.endswith(".jpg") \
