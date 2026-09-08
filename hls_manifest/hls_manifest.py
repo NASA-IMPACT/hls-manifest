@@ -13,7 +13,7 @@ import click
 import os
 import json
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 try:
     from importlib.resources import files as resource_files
 except ImportError:  # Python < 3.9
@@ -37,7 +37,9 @@ from urllib.parse import urlparse
 )
 @click.argument(
     "collection",
-    type=click.Choice(["HLSS30", "HLSL30", "HLSS30_VI", "HLSL30_VI"]),
+    type=click.Choice(
+        ["HLSS30", "HLSL30", "HLSS30_VI", "HLSL30_VI", "HLSM30"]
+    ),
 )
 @click.argument(
     "product",
@@ -57,6 +59,22 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
 
     PRODUCT is the root product identifier with no extension.
     """
+    manifest = build_manifest(inputdir, bucket, collection, product, jobid, gibs)
+    with open(outputfile, 'w') as out:
+        json.dump(manifest, out)
+
+
+def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
+    """Build a validated CNM manifest for the products in inputdir.
+
+    Separated from the command so callers can build a manifest in process
+    rather than through the shell.
+
+    Returns the manifest as a dict.
+
+    Raises FileNotFoundError if inputdir holds no product files, since a
+    manifest listing nothing would ask the DAAC to ingest an empty granule.
+    """
     manifest = {}
     if gibs:
         if collection == "HLSS30":
@@ -69,7 +87,15 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     manifest["identifier"] = jobid
     manifest["duplicationid"] = product
     manifest["version"] = "1.4"
-    manifest["submissionTime"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    manifest["submissionTime"] = datetime.now(timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+
+    if gibs:
+        product_name = product.split("_")[0]
+    else:
+        product_name = product
+
     files = []
     for filename in os.listdir(inputdir):
         if filename.endswith(".tif") or filename.endswith(".jpg") \
@@ -91,8 +117,6 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
             normal_bucket = urlparse(bucket).geturl()
             file_item["uri"] = "%s/%s" % (normal_bucket, filename)
             if gibs:
-                product_components = product.split("_")
-                product_name = product_components[0]
                 if filename.endswith(".tif"):
                     file_item["type"] = "browse"
                     file_item["subtype"] = "geotiff"
@@ -104,7 +128,6 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
                 if filename.endswith("_stac.json"):
                     file_item["type"] = "metadata"
             else:
-                product_name = product
                 if filename.endswith(".tif"):
                     file_item["type"] = "data"
                 if filename.endswith(".xml"):
@@ -115,9 +138,12 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
                     file_item["type"] = "metadata"
 
             files.append(file_item)
-            continue
-        else:
-            continue
+
+    if not files:
+        raise FileNotFoundError(
+            "no product files (.tif, .jpg, .xml, _stac.json) in %s" % inputdir
+        )
+
     manifest["product"] = {
         "name": product_name,
         "dataVersion": "2.0",
@@ -126,12 +152,13 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     }
 
     schema = json.load(
-        resource_files("hls_manifest").joinpath("schema/cumulus_sns_schema_v1.4.1.json").open("rb")
+        resource_files("hls_manifest").joinpath(
+            "schema/cumulus_sns_schema_v1.4.1.json"
+        ).open("rb")
     )
-
     validate(instance=manifest, schema=schema)
-    with open(outputfile, 'w') as out:
-        json.dump(manifest, out)
+    return manifest
+
 
 if __name__ == "__main__":
     main()
