@@ -71,6 +71,9 @@ def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
     rather than through the shell.
 
     Returns the manifest as a dict.
+
+    Raises FileNotFoundError if inputdir holds no product files, since a
+    manifest listing nothing would ask the DAAC to ingest an empty granule.
     """
     manifest = {}
     if gibs:
@@ -135,6 +138,11 @@ def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
                     file_item["type"] = "metadata"
 
             files.append(file_item)
+
+    if not files:
+        raise FileNotFoundError(
+            "no product files (.tif, .jpg, .xml, _stac.json) in %s" % inputdir
+        )
 
     manifest["product"] = {
         "name": product_name,
