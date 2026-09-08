@@ -37,7 +37,9 @@ from urllib.parse import urlparse
 )
 @click.argument(
     "collection",
-    type=click.Choice(["HLSS30", "HLSL30", "HLSS30_VI", "HLSL30_VI"]),
+    type=click.Choice(
+        ["HLSS30", "HLSL30", "HLSS30_VI", "HLSL30_VI", "HLSM30"]
+    ),
 )
 @click.argument(
     "product",
@@ -56,6 +58,19 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     BUCKET is the target LPDAAC S3 bucket.
 
     PRODUCT is the root product identifier with no extension.
+    """
+    manifest = build_manifest(inputdir, bucket, collection, product, jobid, gibs)
+    with open(outputfile, 'w') as out:
+        json.dump(manifest, out)
+
+
+def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
+    """Build a validated CNM manifest for the products in inputdir.
+
+    Separated from the command so callers can build a manifest in process
+    rather than through the shell.
+
+    Returns the manifest as a dict.
     """
     manifest = {}
     if gibs:
@@ -129,12 +144,13 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     }
 
     schema = json.load(
-        resource_files("hls_manifest").joinpath("schema/cumulus_sns_schema_v1.4.1.json").open("rb")
+        resource_files("hls_manifest").joinpath(
+            "schema/cumulus_sns_schema_v1.4.1.json"
+        ).open("rb")
     )
-
     validate(instance=manifest, schema=schema)
-    with open(outputfile, 'w') as out:
-        json.dump(manifest, out)
+    return manifest
+
 
 if __name__ == "__main__":
     main()
