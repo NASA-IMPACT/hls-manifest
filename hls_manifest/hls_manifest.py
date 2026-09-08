@@ -72,6 +72,12 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     manifest["submissionTime"] = datetime.now(timezone.utc).strftime(
         "%Y-%m-%dT%H:%M:%SZ"
     )
+
+    if gibs:
+        product_name = product.split("_")[0]
+    else:
+        product_name = product
+
     files = []
     for filename in os.listdir(inputdir):
         if filename.endswith(".tif") or filename.endswith(".jpg") \
@@ -93,8 +99,6 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
             normal_bucket = urlparse(bucket).geturl()
             file_item["uri"] = "%s/%s" % (normal_bucket, filename)
             if gibs:
-                product_components = product.split("_")
-                product_name = product_components[0]
                 if filename.endswith(".tif"):
                     file_item["type"] = "browse"
                     file_item["subtype"] = "geotiff"
@@ -106,7 +110,6 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
                 if filename.endswith("_stac.json"):
                     file_item["type"] = "metadata"
             else:
-                product_name = product
                 if filename.endswith(".tif"):
                     file_item["type"] = "data"
                 if filename.endswith(".xml"):
@@ -117,9 +120,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
                     file_item["type"] = "metadata"
 
             files.append(file_item)
-            continue
-        else:
-            continue
+
     manifest["product"] = {
         "name": product_name,
         "dataVersion": "2.0",
