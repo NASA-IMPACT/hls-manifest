@@ -9,14 +9,39 @@ $ create_manifest ./hlsdata hlsmanifest.json hls-global HLSS30
 HLS.S30.T01LAH.2020097T222759.v1.5 aeere-33-cssdr false
 
 """
-import click
-import os
-import json
+
 import hashlib
-from datetime import datetime, timezone
+import json
+import os
+from datetime import UTC, datetime
 from importlib.resources import files as resource_files
-from jsonschema import validate
 from urllib.parse import urlparse
+
+import click
+from jsonschema import validate
+
+PRODUCT_EXTENSIONS = (".tif", ".jpg", ".xml", "_stac.json")
+
+
+def _file_type_fields(filename, gibs):
+    """Return the CNM type and subtype fields for a product file.
+
+    GIBS deliveries carry browse imagery, so the same extensions are
+    typed differently than in a science delivery.
+    """
+    if filename.endswith(".tif"):
+        if gibs:
+            return {"type": "browse", "subtype": "geotiff"}
+        return {"type": "data"}
+    if filename.endswith(".xml"):
+        if gibs:
+            return {"type": "metadata", "subtype": "ImageMetadata-v1.2"}
+        return {"type": "metadata"}
+    if filename.endswith(".jpg"):
+        return {"type": "browse"}
+    if filename.endswith("_stac.json"):
+        return {"type": "metadata"}
+    return {}
 
 
 @click.command()
@@ -34,9 +59,7 @@ from urllib.parse import urlparse
 )
 @click.argument(
     "collection",
-    type=click.Choice(
-        ["HLSS30", "HLSL30", "HLSS30_VI", "HLSL30_VI", "HLSM30"]
-    ),
+    type=click.Choice(["HLSS30", "HLSL30", "HLSS30_VI", "HLSL30_VI", "HLSM30"]),
 )
 @click.argument(
     "product",
@@ -57,7 +80,7 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
     PRODUCT is the root product identifier with no extension.
     """
     manifest = build_manifest(inputdir, bucket, collection, product, jobid, gibs)
-    with open(outputfile, 'w') as out:
+    with open(outputfile, "w") as out:
         json.dump(manifest, out)
 
 
@@ -84,9 +107,7 @@ def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
     manifest["identifier"] = jobid
     manifest["duplicationid"] = product
     manifest["version"] = "1.4"
-    manifest["submissionTime"] = datetime.now(timezone.utc).strftime(
-        "%Y-%m-%dT%H:%M:%SZ"
-    )
+    manifest["submissionTime"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     if gibs:
         product_name = product.split("_")[0]
@@ -95,8 +116,7 @@ def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
 
     files = []
     for filename in os.listdir(inputdir):
-        if filename.endswith(".tif") or filename.endswith(".jpg") \
-                or filename.endswith(".xml") or filename.endswith("_stac.json"):
+        if filename.endswith(PRODUCT_EXTENSIONS):
             file_item = {}
             file_item["name"] = filename
             size = os.path.getsize(os.path.join(inputdir, filename))
@@ -112,47 +132,17 @@ def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
             file_item["checksumType"] = "SHA512"
 
             normal_bucket = urlparse(bucket).geturl()
-            file_item["uri"] = "%s/%s" % (normal_bucket, filename)
-            if gibs:
-                if filename.endswith(".tif"):
-                    file_item["type"] = "browse"
-                    file_item["subtype"] = "geotiff"
-                if filename.endswith(".xml"):
-                    file_item["type"] = "metadata"
-                    file_item["subtype"] = "ImageMetadata-v1.2"
-                if filename.endswith(".jpg"):
-                    file_item["type"] = "browse"
-                if filename.endswith("_stac.json"):
-                    file_item["type"] = "metadata"
-            else:
-                if filename.endswith(".tif"):
-                    file_item["type"] = "data"
-                if filename.endswith(".xml"):
-                    file_item["type"] = "metadata"
-                if filename.endswith(".jpg"):
-                    file_item["type"] = "browse"
-                if filename.endswith("_stac.json"):
-                    file_item["type"] = "metadata"
+            file_item["uri"] = f"{normal_bucket}/{filename}"
+            file_item.update(_file_type_fields(filename, gibs))
 
             files.append(file_item)
 
     if not files:
-        raise FileNotFoundError(
-            "no product files (.tif, .jpg, .xml, _stac.json) in %s" % inputdir
-        )
+        raise FileNotFoundError(f"no product files ({', '.join(PRODUCT_EXTENSIONS)}) in {inputdir}")
 
-    manifest["product"] = {
-        "name": product_name,
-        "dataVersion": "2.0",
-        "id": product,
-        "files": files
-    }
+    manifest["product"] = {"name": product_name, "dataVersion": "2.0", "id": product, "files": files}
 
-    schema = json.load(
-        resource_files("hls_manifest").joinpath(
-            "schema/cumulus_sns_schema_v1.4.1.json"
-        ).open("rb")
-    )
+    schema = json.load(resource_files("hls_manifest").joinpath("schema/cumulus_sns_schema_v1.4.1.json").open("rb"))
     validate(instance=manifest, schema=schema)
     return manifest
 
