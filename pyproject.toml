@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hls_manifest"
+description = "Generate LPDAAC manifest files for HLS products"
+readme = "README.md"
+requires-python = ">=3.12"
+dynamic = ["version"]
+dependencies = [
+    "click",
+    "jsonschema",
+]
+
+[project.scripts]
+create_manifest = "hls_manifest.hls_manifest:main"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["hls_manifest"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "hls_manifest",
+    "tests",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy",
+    "types-jsonschema>=4.26.0.20260518",
+]
+
+[tool.pytest.ini_options]
+# Ignores belong here only for warnings raised outside this package, where
+# the call that triggers them is not ours to change.
+filterwarnings = ["error"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = ["B", "C90", "I", "UP"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.mypy]
+python_version = "3.12"
+files = ["hls_manifest", "tests"]
+strict = true
