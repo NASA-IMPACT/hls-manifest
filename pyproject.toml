@@ -36,6 +36,11 @@ dev = [
     "types-jsonschema>=4.26.0.20260518",
 ]
 
+[tool.pytest.ini_options]
+# Ignores belong here only for warnings raised outside this package, where
+# the call that triggers them is not ours to change.
+filterwarnings = ["error"]
+
 [tool.ruff]
 line-length = 120
 
