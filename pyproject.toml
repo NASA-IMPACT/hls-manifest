@@ -31,4 +31,23 @@ include = [
 [dependency-groups]
 dev = [
     "pytest",
+    "ruff",
+    "mypy",
+    "types-jsonschema>=4.26.0.20260518",
 ]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = ["B", "C90", "I", "UP"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.mypy]
+python_version = "3.12"
+files = ["hls_manifest", "tests"]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
