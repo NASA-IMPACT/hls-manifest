@@ -158,7 +158,9 @@ def build_manifest(
 
     manifest["product"] = {"name": product_name, "dataVersion": "2.0", "id": product, "files": files}
 
-    schema = json.load(resource_files("hls_manifest").joinpath("schema/cumulus_sns_schema_v1.4.1.json").open("rb"))
+    schema_resource = resource_files("hls_manifest").joinpath("schema/cumulus_sns_schema_v1.4.1.json")
+    with schema_resource.open("rb") as schema_file:
+        schema = json.load(schema_file)
     validate(instance=manifest, schema=schema)
     return manifest
 
