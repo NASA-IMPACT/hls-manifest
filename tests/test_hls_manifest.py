@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 
@@ -10,9 +11,9 @@ current_dir = os.path.dirname(__file__)
 test_dir = os.path.join(current_dir, "data")
 
 
-def test_hls_manifest() -> None:
+def test_hls_manifest(tmp_path: Path) -> None:
     product = "HLS.S30.T01LAH.2020097T222759.v1.5"
-    outputfile = os.path.join(test_dir, product.format(".json"))
+    outputfile = str(tmp_path / f"{product}.json")
     bucket = "s3://hls-global"
     collection = "HLSS30"
     jobid = "test"
@@ -22,11 +23,13 @@ def test_hls_manifest() -> None:
         main, [test_dir, outputfile, bucket, collection, product, jobid, gibs], catch_exceptions=False
     )
     assert result.exit_code == 0
+    with open(outputfile) as written:
+        assert json.load(written)["product"]["id"] == product
 
 
-def test_hls_gibs_manifest() -> None:
+def test_hls_gibs_manifest(tmp_path: Path) -> None:
     product = "HLS.S30.2020116.099152_6"
-    outputfile = os.path.join(test_dir, product.format(".json"))
+    outputfile = str(tmp_path / f"{product}.json")
     bucket = "s3://hls-global"
     collection = "HLSS30"
     jobid = "test"
@@ -36,11 +39,13 @@ def test_hls_gibs_manifest() -> None:
         main, [test_dir, outputfile, bucket, collection, product, jobid, gibs], catch_exceptions=False
     )
     assert result.exit_code == 0
+    with open(outputfile) as written:
+        assert json.load(written)["product"]["id"] == product
 
 
-def test_hls_L30_manifest() -> None:
+def test_hls_L30_manifest(tmp_path: Path) -> None:
     product = "HLS.L30.T01LAH.2020097T222759.v1.5"
-    outputfile = os.path.join(test_dir, product.format(".json"))
+    outputfile = str(tmp_path / f"{product}.json")
     bucket = "s3://hls-global"
     collection = "HLSL30"
     jobid = "test"
@@ -50,6 +55,8 @@ def test_hls_L30_manifest() -> None:
         main, [test_dir, outputfile, bucket, collection, product, jobid, gibs], catch_exceptions=False
     )
     assert result.exit_code == 0
+    with open(outputfile) as written:
+        assert json.load(written)["product"]["id"] == product
 
 
 def test_build_manifest_rejects_an_empty_directory(tmp_path: Path) -> None:
