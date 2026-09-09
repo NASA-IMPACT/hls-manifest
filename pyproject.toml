@@ -48,6 +48,4 @@ max-complexity = 12
 [tool.mypy]
 python_version = "3.12"
 files = ["hls_manifest", "tests"]
-warn_unused_configs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+strict = true

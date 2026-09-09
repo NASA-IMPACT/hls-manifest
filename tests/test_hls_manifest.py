@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
@@ -9,7 +10,7 @@ current_dir = os.path.dirname(__file__)
 test_dir = os.path.join(current_dir, "data")
 
 
-def test_hls_manifest():
+def test_hls_manifest() -> None:
     product = "HLS.S30.T01LAH.2020097T222759.v1.5"
     outputfile = os.path.join(test_dir, product.format(".json"))
     bucket = "s3://hls-global"
@@ -23,7 +24,7 @@ def test_hls_manifest():
     assert result.exit_code == 0
 
 
-def test_hls_gibs_manifest():
+def test_hls_gibs_manifest() -> None:
     product = "HLS.S30.2020116.099152_6"
     outputfile = os.path.join(test_dir, product.format(".json"))
     bucket = "s3://hls-global"
@@ -37,7 +38,7 @@ def test_hls_gibs_manifest():
     assert result.exit_code == 0
 
 
-def test_hls_L30_manifest():
+def test_hls_L30_manifest() -> None:
     product = "HLS.L30.T01LAH.2020097T222759.v1.5"
     outputfile = os.path.join(test_dir, product.format(".json"))
     bucket = "s3://hls-global"
@@ -51,13 +52,13 @@ def test_hls_L30_manifest():
     assert result.exit_code == 0
 
 
-def test_build_manifest_rejects_an_empty_directory(tmp_path):
+def test_build_manifest_rejects_an_empty_directory(tmp_path: Path) -> None:
     """A manifest listing no files would ask for an empty granule."""
     with pytest.raises(FileNotFoundError, match="no product files"):
         build_manifest(str(tmp_path), "s3://hls-global", "HLSM30", "GRAN", "job", False)
 
 
-def test_build_manifest_returns_a_dict():
+def test_build_manifest_returns_a_dict() -> None:
     manifest = build_manifest(
         test_dir,
         "s3://hls-global",

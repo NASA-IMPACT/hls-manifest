@@ -15,15 +15,16 @@ import json
 import os
 from datetime import UTC, datetime
 from importlib.resources import files as resource_files
+from typing import Any
 from urllib.parse import urlparse
 
 import click
 from jsonschema import validate
 
-PRODUCT_EXTENSIONS = (".tif", ".jpg", ".xml", "_stac.json")
+PRODUCT_EXTENSIONS: tuple[str, ...] = (".tif", ".jpg", ".xml", "_stac.json")
 
 
-def _file_type_fields(filename, gibs):
+def _file_type_fields(filename: str, gibs: bool) -> dict[str, str]:
     """Return the CNM type and subtype fields for a product file.
 
     GIBS deliveries carry browse imagery, so the same extensions are
@@ -73,7 +74,15 @@ def _file_type_fields(filename, gibs):
     "gibs",
     type=click.BOOL,
 )
-def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
+def main(
+    inputdir: str,
+    outputfile: str,
+    bucket: str,
+    collection: str,
+    product: str,
+    jobid: str,
+    gibs: bool,
+) -> None:
     """
     BUCKET is the target LPDAAC S3 bucket.
 
@@ -84,7 +93,14 @@ def main(inputdir, outputfile, bucket, collection, product, jobid, gibs):
         json.dump(manifest, out)
 
 
-def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
+def build_manifest(
+    inputdir: str,
+    bucket: str,
+    collection: str,
+    product: str,
+    jobid: str,
+    gibs: bool,
+) -> dict[str, Any]:
     """Build a validated CNM manifest for the products in inputdir.
 
     Separated from the command so callers can build a manifest in process
@@ -95,7 +111,7 @@ def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
     Raises FileNotFoundError if inputdir holds no product files, since a
     manifest listing nothing would ask the DAAC to ingest an empty granule.
     """
-    manifest = {}
+    manifest: dict[str, Any] = {}
     if gibs:
         if collection == "HLSS30":
             manifest["collection"] = "HLS_S30_Nadir_BRDF_Adjusted_Reflectance_v2.0_STD"
@@ -114,10 +130,10 @@ def build_manifest(inputdir, bucket, collection, product, jobid, gibs):
     else:
         product_name = product
 
-    files = []
+    files: list[dict[str, Any]] = []
     for filename in os.listdir(inputdir):
         if filename.endswith(PRODUCT_EXTENSIONS):
-            file_item = {}
+            file_item: dict[str, Any] = {}
             file_item["name"] = filename
             size = os.path.getsize(os.path.join(inputdir, filename))
             file_item["size"] = size
