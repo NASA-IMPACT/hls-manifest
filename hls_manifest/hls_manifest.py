@@ -14,10 +14,7 @@ import os
 import json
 import hashlib
 from datetime import datetime, timezone
-try:
-    from importlib.resources import files as resource_files
-except ImportError:  # Python < 3.9
-    from importlib_resources import files as resource_files
+from importlib.resources import files as resource_files
 from jsonschema import validate
 from urllib.parse import urlparse
 

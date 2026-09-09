@@ -6,8 +6,11 @@
 $ create_manifest INPUTDIR OUTPUTFILE BUCKET COLLECTION PRODUCT JOBID GIBS
 ```
 
-### Tests
-Run Tests
+## Development
+
+This project uses [uv](https://docs.astral.sh/uv/).
+
 ```bash
-$ tox
+$ uv sync
+$ uv run pytest
 ```

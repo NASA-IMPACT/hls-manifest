@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hls_manifest"
+description = "Generate LPDAAC manifest files for HLS products"
+readme = "README.md"
+requires-python = ">=3.12"
+dynamic = ["version"]
+dependencies = [
+    "click",
+    "jsonschema",
+]
+
+[project.scripts]
+create_manifest = "hls_manifest.hls_manifest:main"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["hls_manifest"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "hls_manifest",
+    "tests",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
