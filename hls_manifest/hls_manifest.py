@@ -21,7 +21,7 @@ from urllib.parse import urlparse
 import click
 from jsonschema import validate
 
-PRODUCT_EXTENSIONS: tuple[str, ...] = (".tif", ".jpg", ".xml", "_stac.json")
+PRODUCT_EXTENSIONS: tuple[str, ...] = (".tif", ".jpg", ".png", ".xml", "_stac.json")
 
 
 def _file_type_fields(filename: str, gibs: bool) -> dict[str, str]:
@@ -38,7 +38,7 @@ def _file_type_fields(filename: str, gibs: bool) -> dict[str, str]:
         if gibs:
             return {"type": "metadata", "subtype": "ImageMetadata-v1.2"}
         return {"type": "metadata"}
-    if filename.endswith(".jpg"):
+    if filename.endswith((".jpg", ".png")):
         return {"type": "browse"}
     if filename.endswith("_stac.json"):
         return {"type": "metadata"}
