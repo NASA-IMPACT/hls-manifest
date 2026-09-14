@@ -76,3 +76,12 @@ def test_build_manifest_returns_a_dict() -> None:
     )
     assert manifest["collection"] == "HLSS30"
     assert manifest["product"]["files"]
+
+
+@pytest.mark.parametrize("name", ["GRAN.jpg", "GRAN.EVI.png"])
+def test_browse_images_are_typed_as_browse(tmp_path: Path, name: str) -> None:
+    (tmp_path / name).write_bytes(b"image")
+
+    manifest = build_manifest(str(tmp_path), "s3://hls-global", "HLSM30", "GRAN", "job", False)
+
+    assert [(f["name"], f["type"]) for f in manifest["product"]["files"]] == [(name, "browse")]
