@@ -108,6 +108,10 @@ def build_manifest(
 
     Returns the manifest as a dict.
 
+    The CNM `provider` field is set by the hls-lpdaac forwarder, which selects
+    the value matching the LPDAAC queue it publishes to. Manifests built here
+    must not set it; the forwarder rejects a manifest that already carries one.
+
     Raises FileNotFoundError if inputdir holds no product files, since a
     manifest listing nothing would ask the DAAC to ingest an empty granule.
     """
@@ -158,11 +162,19 @@ def build_manifest(
 
     manifest["product"] = {"name": product_name, "dataVersion": "2.0", "id": product, "files": files}
 
+    validate_manifest(manifest)
+    return manifest
+
+
+def validate_manifest(manifest: dict[str, Any]) -> None:
+    """Validate a CNM manifest against the Cumulus SNS message schema.
+
+    Raises jsonschema.ValidationError if the manifest does not conform.
+    """
     schema_resource = resource_files("hls_manifest").joinpath("schema/cumulus_sns_schema_v1.4.1.json")
     with schema_resource.open("rb") as schema_file:
         schema = json.load(schema_file)
     validate(instance=manifest, schema=schema)
-    return manifest
 
 
 if __name__ == "__main__":
