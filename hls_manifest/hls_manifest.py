@@ -108,6 +108,10 @@ def build_manifest(
 
     Returns the manifest as a dict.
 
+    The CNM `provider` field is set by the hls-lpdaac forwarder, which selects
+    the value matching the LPDAAC queue it publishes to. Manifests built here
+    must not set it; the forwarder rejects a manifest that already carries one.
+
     Raises FileNotFoundError if inputdir holds no product files, since a
     manifest listing nothing would ask the DAAC to ingest an empty granule.
     """

@@ -109,3 +109,22 @@ def test_validate_manifest_rejects_a_bad_manifest() -> None:
 
     with pytest.raises(ValidationError):
         validate_manifest({"version": 1.4})
+
+
+def test_build_manifest_does_not_set_provider() -> None:
+    """The CNM provider field belongs to the hls-lpdaac forwarder.
+
+    hls-lpdaac rejects any manifest that already carries it.
+    """
+    from hls_manifest import build_manifest
+
+    manifest = build_manifest(
+        test_dir,
+        "s3://hls-global",
+        "HLSS30",
+        "HLS.S30.T01LAH.2020097T222759.v1.5",
+        "test",
+        False,
+    )
+
+    assert "provider" not in manifest
