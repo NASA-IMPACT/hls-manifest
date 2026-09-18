@@ -85,3 +85,27 @@ def test_browse_images_are_typed_as_browse(tmp_path: Path, name: str) -> None:
     manifest = build_manifest(str(tmp_path), "s3://hls-global", "HLSM30", "GRAN", "job", False)
 
     assert [(f["name"], f["type"]) for f in manifest["product"]["files"]] == [(name, "browse")]
+
+
+def test_validate_manifest_accepts_a_built_manifest() -> None:
+    from hls_manifest import build_manifest, validate_manifest
+
+    manifest = build_manifest(
+        test_dir,
+        "s3://hls-global",
+        "HLSS30",
+        "HLS.S30.T01LAH.2020097T222759.v1.5",
+        "test",
+        False,
+    )
+
+    validate_manifest(manifest)
+
+
+def test_validate_manifest_rejects_a_bad_manifest() -> None:
+    from jsonschema import ValidationError
+
+    from hls_manifest import validate_manifest
+
+    with pytest.raises(ValidationError):
+        validate_manifest({"version": 1.4})
